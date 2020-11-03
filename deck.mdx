@@ -1,0 +1,361 @@
+import { CodeSurfer } from "code-surfer";
+import { nightOwl } from "@code-surfer/themes";
+
+export const theme = {
+    ...nightOwl,
+    colors: {
+        background: "#011627",
+        text: "#fff",
+        primary: "hsl(33, 100%, 77%)"
+    },
+    lineHeights: {
+        ...nightOwl.lineHeights,
+        body: 2
+    },
+    styles: {
+        ...nightOwl.styles,
+        h2: {
+            ...nightOwl.styles.h2,
+            color: "rgb(255,88,116)"
+        },
+        h3: {
+            ...nightOwl.styles.h3,
+            color: "rgb(255,88,116)"
+        },
+        strong: {
+            color: "primary"
+        }
+    } 
+}
+
+## Minska boilerplate och underlätta testning
+> Flytta boilerplate? Separera concerns?
+
+---
+
+## Agenda
+
+* `createReducer` (redux toolkit)
+* `createAction` (redux toolkit)
+* `createStore` (custom)
+* `msw`: (testning)
+
+---
+
+* <strong style={{ color: 'hsl(220, 100%, 77%)' }}>Store</strong>: har hand om att lagra data
+* <strong style={{ color: 'hsl(33, 100%, 77%)' }}>Action</strong>: kallas på för att ändra store state
+* <strong style={{ color: 'hsl(100, 100%, 77%)' }}>API</strong>: returnerar enbart data
+
+---
+
+<CodeSurfer>
+
+```ts
+new Create(thing);
+```
+
+```ts
+new Create(thing);
+
+class Create extends Action {
+  constructor(public thing: any) {
+    super(false);
+    this.doDispatch();
+  }
+}
+```
+
+</CodeSurfer>
+
+---
+
+## Vad som typ händer
+
+* Store **kanske** kallar på API vid action
+* Store **kanske** kallar på olika endpoints
+* Store **kanske** sparar nytt state
+* Store **kanske** notifierar lyssnare
+* API returnerar **oftast** inte data utan kallar på action
+
+---
+
+<img src="https://media1.tenor.com/images/a7b9eca631101d2561401a61afa6e2df/tenor.gif?itemid=13573950" />
+
+---
+
+## Summering
+
+* Man kan sällan göra det ena utan att göra det andra
+* Man kan aldrig veta vad som kommer att hända
+* Hur det funkar är upp till implementeringen av varje enskild utvecklare
+
+---
+
+### Kan existerande verktyg förstärka/vägleda?
+
+---
+
+<CodeSurfer>
+
+```js title="Redux, state in, state out" subtitle="reducer"
+(previouState, action) => nextState
+```
+</CodeSurfer>
+
+---
+
+## Wallux (Wallebom Redux)
+
+* **`ReduceStore`** - kompabilitet med gamla stores (`redux`)
+* `connect` - koppla upp sig mot stores (`react-redux`)
+* `Provider` - förse komponenter med store state (`react-redux`)
+
+---
+
+## Redux Toolkit
+
+> The official, opinionated, batteries-included toolset
+> for efficient Redux development
+
+* TypeScript, korrekt upptypat redan
+* `createReducer`
+* `createAction`
+
+---
+
+<CodeSurfer>
+
+```ts
+export class LoadSuccess extends Action {
+    static actionType: string = "user_loadSuccess";
+    public users: List<User>;
+    constructor(users: List<User>) {
+        super(false);
+        this.users = users;
+        this.doDispatch();
+    }
+}
+```
+
+```ts
+export class LoadSuccess extends Action {
+    static actionType: string = "user_loadSuccess";
+    public users: List<User>;
+    constructor(users: List<User>) {
+        super(false);
+        this.users = users;
+        this.doDispatch();
+    }
+}
+
+export class Loading extends Action {
+    static actionType: string = "user_loading";
+    constructor() {
+        super(false);
+        this.doDispatch();
+    }
+}
+
+export class Create extends Action {
+    static actionType: string = "user_create";
+    constructor(public user: User) {
+        super(false);
+        this.doDispatch();
+    }
+}
+
+export class Delete extends Action {
+    static actionType: string = "user_delete";
+    constructor(public id: number) {
+        super(false);
+        this.doDispatch();
+    }
+}
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```ts
+export const userLoadSuccess = "user_loadSuccess";
+export class LoadSuccess extends Action {
+    static actionType: string = userLoadSuccess;
+    readonly actionType = userLoadSuccess;
+    public users: List<User>;
+    constructor(users: List<User>) {
+        super(false);
+        this.users = users;
+        this.doDispatch();
+    }
+}
+export const userLoading = "user_loading";
+export class Loading extends Action {
+    static actionType: string = userLoading;
+    readonly actionType = userLoading;
+    constructor() {
+        super(false);
+        this.doDispatch();
+    }
+}
+
+export const userCreate = "user_create";
+export class Create extends Action {
+    static actionType: string = userCreate;
+    readonly actionType = userCreate;
+    constructor(public user: User) {
+        super(false);
+        this.doDispatch();
+    }
+}
+
+export const userDelete = "user_delete";
+export class Delete extends Action {
+    static actionType: string = userDelete;
+    readonly actionType = userDelete;
+    constructor(public id: number) {
+        super(false);
+        this.doDispatch();
+    }
+}
+
+export type Actions = LoadSuccess | Loading | Create | Delete
+```
+
+```ts subtitle="Med redux toolkits createAction"
+import { createAction } from "@reduxjs/toolkit";
+
+const loadSuccess = createAction<List<User>>("user_loadSuccess");
+const loading = createAction("user_loading");
+const create = createAction<User>("user_create");
+const remove = createAction<number>("user_remove");
+```
+
+```ts 3[34:43],5[29:32],6[29:34] subtitle="Typad payload"
+import { createAction } from "@reduxjs/toolkit";
+
+const loadSuccess = createAction<List<User>>("user_loadSuccess");
+const loading = createAction("user_loading");
+const create = createAction<User>("user_create");
+const remove = createAction<number>("user_remove");
+
+```
+
+```ts 3[47:50],4[31:34],5[34:39],6[38:41] subtitle="Namespace"
+import { createAction } from "@reduxjs/toolkit";
+
+const loadSuccess = createAction<List<User>>("user_loadSuccess");
+const loading = createAction("user_loading");
+const create = createAction<User>("user_create");
+const remove = createAction<number>("user_remove");
+```
+
+```ts
+import { createReducer } from "@reduxjs/toolkit";
+import { create } from "./actions";
+
+const userReducer = createReducer(
+  initialState,
+  (builder) => {
+    builder.addCase(create, (state, action) => {
+      state.users = state.users.push(action.payload);
+    })
+  }
+)
+
+export const userStore = new ReduceStore(userReducer);
+```
+
+```ts 6:10 subtitle="Upptypat och klart"
+import { createReducer } from "@reduxjs/toolkit";
+import { create } from "./actions";
+
+const userReducer = createReducer(
+  initialState,
+  (builder) => {
+    builder.addCase(create, (state, action) => {
+      state.users = state.users.push(action.payload);
+    })
+  }
+)
+
+export const userStore = new ReduceStore(userReducer);
+```
+
+```ts 1[25:33],3:6
+import { createReducer, AnyAction } from "@reduxjs/toolkit";
+import { create } from "./actions";
+import { SomeOldActionClass } from "./anywhere";
+
+const matcher = (action: AnyAction): action is AnyAction => {
+  return action instanceof SomeOldActionClass;
+}
+
+const userReducer = createReducer(
+  initialState,
+  (builder) => {
+    builder.addMatcher(matcher, () => {
+        // Do something that matches
+    })
+  }
+)
+
+export const userStore = new ReduceStore(userReducer);
+```
+
+```ts 4:6,11:15
+import { createReducer, AnyAction } from "@reduxjs/toolkit";
+import { create } from "./actions";
+import { SomeOldActionClass } from "./anywhere";
+
+const matcher = (action: AnyAction): action is AnyAction => {
+  return action instanceof SomeOldActionClass;
+}
+
+const userReducer = createReducer(
+  initialState,
+  (builder) => {
+    builder.addMatcher(matcher, () => {
+        // Do something that matches
+    })
+  }
+)
+
+export const userStore = new ReduceStore(userReducer);
+```
+
+</CodeSurfer>
+
+---
+
+## Har du några exempel?
+
+* `ReduceStore` används flitigt av bokning och tid
+* `Redux ToolKit` finns på några få ställen
+
+---
+
+### Har du byggt en mängd halvt genomtänkta abstraktioner?
+
+* `BaseCrudApi`
+* `createStore`
+* `createCrudReducer`
+* `createCrudActions`
+* `createCrudActionCreators`
+* `createCrudMockServer`
+
+---
+
+<CodeSurfer>
+
+```ts title="Mock Service Worker" subtitle="Intercepts requests on the network level, not the application level."
+const server = setupServer(
+  rest.post('*/api/v1/user', (req, res, ctx) => {
+    return res(ctx.json({ name: 'zero_cool'}))
+  })
+)
+```
+
+</CodeSurfer>
