@@ -1,5 +1,7 @@
 ## Presentation for Hacker Friday 6/11
 
+* [**Presentation**](deck.mdx)
+
 ### Testing
 
 * [**MSW**](https://mswjs.io/)
