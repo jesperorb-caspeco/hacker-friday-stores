@@ -1,6 +1,7 @@
 ## Presentation for Hacker Friday 6/11
 
 * [**Presentation**](deck.mdx)
+* [**Demo code** (WebPlatform)](https://github.com/Caspeco/WebPlatform/pull/552)
 
 ### Testing
 
